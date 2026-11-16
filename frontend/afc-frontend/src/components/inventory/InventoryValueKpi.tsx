@@ -81,6 +81,7 @@ function InventoryValueKpiInner({ refreshToken, suppliers }: InventoryValueKpiPr
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query.trim()), 350);
@@ -88,7 +89,7 @@ function InventoryValueKpiInner({ refreshToken, suppliers }: InventoryValueKpiPr
   }, [query]);
 
   useEffect(() => {
-    if (!isAdmin || hidden) return;
+    if (!isAdmin || hidden || !expanded) return;
     const controller = new AbortController();
     let cancelled = false;
 
@@ -125,7 +126,7 @@ function InventoryValueKpiInner({ refreshToken, suppliers }: InventoryValueKpiPr
       cancelled = true;
       controller.abort();
     };
-  }, [isAdmin, hidden, refreshToken, activeWarehouseId, breakdown, supplierId, debouncedQuery, reloadKey]);
+  }, [isAdmin, hidden, expanded, refreshToken, activeWarehouseId, breakdown, supplierId, debouncedQuery, reloadKey]);
 
   if (!isAdmin || hidden) return null;
 
@@ -146,11 +147,32 @@ function InventoryValueKpiInner({ refreshToken, suppliers }: InventoryValueKpiPr
 
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden border-t-4 border-emerald-500">
-      <div className="px-5 py-4 space-y-4">
+      <button
+        type="button"
+        className="w-full flex items-center justify-between gap-3 px-5 py-3 text-left hover:bg-gray-50 transition"
+        aria-expanded={expanded}
+        aria-controls="inventory-value-panel"
+        onClick={() => setExpanded((open) => !open)}
+      >
+        <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Inventory value</span>
+        <svg
+          className={`h-4 w-4 text-gray-400 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+      {expanded && (
+      <div id="inventory-value-panel" className="px-5 pb-4 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Inventory value</p>
-            <p className="text-3xl font-bold text-gray-800 mt-1" aria-live="polite">
+            <p className="text-3xl font-bold text-gray-800" aria-live="polite">
               {shown ? formatUnitPrice(shown.gross_total) : visibleError ? "—" : "…"}
             </p>
             <p className="text-xs text-gray-400 mt-1">
@@ -308,6 +330,7 @@ function InventoryValueKpiInner({ refreshToken, suppliers }: InventoryValueKpiPr
           <div className="h-8 w-48 bg-gray-100 rounded animate-pulse" aria-hidden="true" />
         )}
       </div>
+      )}
     </section>
   );
 }
